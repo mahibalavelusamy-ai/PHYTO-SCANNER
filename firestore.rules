@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Scans collection: Allow users to access and manage their own scans
+    match /scans/{scanId} {
+      allow read, delete: if (request.auth != null && resource.data.userId == request.auth.uid)
+                          || (request.auth == null && resource.data.userId is string);
+      allow create: if (request.auth != null && request.resource.data.userId == request.auth.uid)
+                    || (request.auth == null && request.resource.data.userId is string);
+      allow update: if (request.auth != null && resource.data.userId == request.auth.uid)
+                    || (request.auth == null && resource.data.userId is string);
+    }
+    
+    // User profile and subcollections
+    match /users/{userId} {
+      allow read, write: if (request.auth != null && request.auth.uid == userId)
+                         || (request.auth == null);
+      
+      match /scans/{scanId} {
+        allow read, write: if (request.auth != null && request.auth.uid == userId)
+                           || (request.auth == null);
+      }
+    }
+  }
+}
